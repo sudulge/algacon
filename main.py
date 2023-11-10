@@ -1,16 +1,24 @@
+# TODO: 점수 추가, 각 플레이어 영역에서 운석 등장하게 변경, 점수기준으로 운석 많이 나오게 할건지 시간 기준으로 할건지 변경,
+#       아이템 추가, ;
+#       게임 오버화면 - p1, p2 각각 승리화면
+
 import pygame
 import random
 import time
 
+# 게임 화면 세팅
 WINDOW_WIDTH = 1680
 WINDOW_HEIGHT = 1050
 P1_WIDTH = 840
-P2_width = 1680
+P2_WIDTH = 1680
 
+# 프레임 설정
 FPS = 60
 
+# 화면상에 존재하는 운석 그룹
 rocks = pygame.sprite.Group()
 
+# 전투기 클래스 정의
 class Fighter(pygame.sprite.Sprite):
     def __init__(self, border_left, border_right):
         super(Fighter, self).__init__()
@@ -23,6 +31,7 @@ class Fighter(pygame.sprite.Sprite):
         self.dx = 0
         self.dy = 0
     
+    # 움직임
     def update(self):
         self.rect.x += self.dx
         self.rect.y += self.dy
@@ -36,11 +45,13 @@ class Fighter(pygame.sprite.Sprite):
     def draw(self, screen):
         screen.blit(self.image, self.rect)
 
+    # 충돌 판정
     def collide(self, sprites):
         for sprite in sprites:
             if pygame.sprite.collide_rect(self, sprite) :
                 return sprite
     
+# 미사일 클래스 정의
 class Missile(pygame.sprite.Sprite):
     def __init__(self, xpos, ypos, speed):
         super(Missile, self).__init__()
@@ -64,7 +75,8 @@ class Missile(pygame.sprite.Sprite):
         for sprite in sprites:
             if pygame.sprite.collide_rect(self, sprite):
                 return sprite
-            
+
+# 운석 클래스 정의            
 class Rock(pygame.sprite.Sprite):
     def __init__(self, xpos, ypos, speed):
         super(Rock, self).__init__()
@@ -84,10 +96,12 @@ class Rock(pygame.sprite.Sprite):
         if self.rect.y > WINDOW_HEIGHT:
             return True
 
+# 기본 운석
 class DefaultRock(Rock):
     def __init__(self, xpos, ypos, speed):
         super().__init__(xpos, ypos, speed)
 
+# 분할 운석
 class SplitRock(Rock):
     def __init__(self, xpos, ypos, speed):
         super().__init__(xpos, ypos, speed)
@@ -99,6 +113,7 @@ class SplitRock(Rock):
         rocks.add(rock1)
         rocks.add(rock2)
 
+# 텍스트 보여주는 함수
 def draw_text(text, font, surface, x, y, main_color):
     text_obj = font.render(text, True, main_color)
     text_rect = text_obj.get_rect()
@@ -106,7 +121,7 @@ def draw_text(text, font, surface, x, y, main_color):
     text_rect.centery = y
     surface.blit(text_obj, text_rect)
 
-
+# 폭발 함수
 def occur_explosion(surface, x, y):
     explosion_image = pygame.image.load('src/explosion.png')
     explosion_rect = explosion_image.get_rect()
@@ -118,6 +133,7 @@ def occur_explosion(surface, x, y):
     # explosion_sound = pygame.mixer.Sound(random.choice(explosion_sounds))
     # explosion_sound.play()
 
+# 게임 진행 루프
 def game_loop():
     default_font = pygame.font.Font('src/NanumGothic.ttf', 28)
     background_image = pygame.image.load('src/background.png')
@@ -141,6 +157,9 @@ def game_loop():
     running = True
 
     while running:
+        # 게임 시작 후 경과 시간 
+        elapsed_time = int((pygame.time.get_ticks() - start_ticks) / 1000)
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -154,6 +173,11 @@ def game_loop():
                     p1_fighter.dy -= 10
                 elif event.key == pygame.K_s:
                     p1_fighter.dy += 10
+                elif event.key == pygame.K_SPACE:
+                    missile = Missile(p1_fighter.rect.centerx, p1_fighter.rect.y, 10)
+                    missile.launch()
+                    missiles.add(missile)
+
                 elif event.key == pygame.K_LEFT:
                     p2_fighter.dx -= 10
                 elif event.key == pygame.K_RIGHT:
@@ -162,10 +186,6 @@ def game_loop():
                     p2_fighter.dy -= 10
                 elif event.key == pygame.K_DOWN:
                     p2_fighter.dy += 10
-                elif event.key == pygame.K_SPACE:
-                    missile = Missile(p1_fighter.rect.centerx, p1_fighter.rect.y, 10)
-                    missile.launch()
-                    missiles.add(missile)
                 elif event.key == pygame.K_RCTRL:
                     missile = Missile(p2_fighter.rect.centerx, p2_fighter.rect.y, 10)
                     missile.launch()
@@ -183,6 +203,7 @@ def game_loop():
 
         screen.blit(background_image, background_image.get_rect())
 
+        # 운석 등장 횟수(확률) 조정 
         occur_of_default_rocks = 3 + int(shot_count / 10)
         occur_of_split_rocks = occur_of_default_rocks - 1
         min_rock_speed = 1 + int(shot_count / 200)
@@ -203,6 +224,7 @@ def game_loop():
         
         draw_text(f'파괴한 운석: {shot_count}', default_font, screen, 100, 20, (255, 255, 255))
         draw_text(f'놓친 운석: {count_missed}', default_font, screen, 400, 20, (255, 0, 0))
+        draw_text(f'{180 - elapsed_time}', pygame.font.Font('src/NanumGothic.ttf', 60), screen, 840, 30, (255, 255, 255))
 
         for missile in missiles:
             rock = missile.collide(rocks)
@@ -229,6 +251,7 @@ def game_loop():
         p2_fighter.draw(screen)
         pygame.display.flip()
 
+        # 게임 오버 조건
         if p1_fighter.collide(rocks) or count_missed >= 3:
             pygame.mixer_music.stop()
             occur_explosion(screen, p1_fighter.rect.x, p1_fighter.rect.y)
@@ -245,9 +268,7 @@ def game_loop():
             time.sleep(1)
             running = False
 
-        elapsed_time = int((pygame.time.get_ticks() - start_ticks) / 1000)
-        
-        if elapsed_time >= 2:
+        if elapsed_time >= 180:
             running = False
             return 'time_end'
         
@@ -255,6 +276,7 @@ def game_loop():
 
     return 'game_menu'
 
+# 게임 메뉴(시작) 화면
 def game_menu():
     start_image = pygame.image.load('src/background.png')
     screen.blit(start_image, [0, 0])
@@ -279,6 +301,7 @@ def game_menu():
         
     return 'game_menu'
 
+# 시간초과 화면
 def time_end():
     start_image = pygame.image.load('src/background.png')
     screen.blit(start_image, [0, 0])
@@ -301,6 +324,7 @@ def time_end():
 
     return 'time_end'
 
+# 메인 루프
 def main():
     global screen
 
@@ -309,6 +333,8 @@ def main():
     screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
     pygame.display.set_caption('PyShooting')
 
+    # 현재 action 에 따라서 게임 화면 구성
+    # 메인 메뉴 화면으로 시작
     action = 'game_menu'
 
     while action != 'quit':
