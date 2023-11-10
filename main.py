@@ -135,6 +135,9 @@ def game_loop():
     shot_count = 0
     count_missed = 0
 
+    # 타이머 설정
+    start_ticks = pygame.time.get_ticks()
+
     running = True
 
     while running:
@@ -242,6 +245,12 @@ def game_loop():
             time.sleep(1)
             running = False
 
+        elapsed_time = int((pygame.time.get_ticks() - start_ticks) / 1000)
+        
+        if elapsed_time >= 2:
+            running = False
+            return 'time_end'
+        
         fps_clock.tick(FPS)
 
     return 'game_menu'
@@ -262,7 +271,6 @@ def game_menu():
 
     for event in pygame.event.get():
         if event.type == pygame.KEYDOWN:
-            print(event.key)
             if event.key == pygame.K_RETURN:
                 return 'play'
             
@@ -270,6 +278,28 @@ def game_menu():
             return 'quit'
         
     return 'game_menu'
+
+def time_end():
+    start_image = pygame.image.load('src/background.png')
+    screen.blit(start_image, [0, 0])
+    draw_x = int(WINDOW_WIDTH / 2)
+    draw_y = int(WINDOW_HEIGHT / 4)
+    font_70 = pygame.font.Font('src/NanumGothic.ttf', 70)
+    font_40 = pygame.font.Font('src/NanumGothic.ttf', 40)
+
+    draw_text("게임 오버", font_70, screen, draw_x, draw_y, (0, 255, 255))
+
+    pygame.display.update()
+
+    for event in pygame.event.get():
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_RETURN:
+                return 'game_menu'
+            
+        if event.type == pygame.QUIT:
+            return 'quit'
+
+    return 'time_end'
 
 def main():
     global screen
@@ -286,6 +316,8 @@ def main():
             action = game_menu()
         elif action == 'play':
             action = game_loop()
+        elif action == 'time_end':
+            action = time_end()
 
     pygame.quit()
 
