@@ -20,9 +20,9 @@ rocks = pygame.sprite.Group()
 
 # 전투기 클래스 정의
 class Fighter(pygame.sprite.Sprite):
-    def __init__(self, border_left, border_right):
+    def __init__(self, border_left, border_right, image):
         super(Fighter, self).__init__()
-        self.image = pygame.image.load('src/fighter1.png')
+        self.image = pygame.image.load(f'src/{image}')
         self.border_left = border_left
         self.border_right = border_right
         self.rect = self.image.get_rect()
@@ -30,6 +30,7 @@ class Fighter(pygame.sprite.Sprite):
         self.rect.y = WINDOW_HEIGHT - self.rect.height
         self.dx = 0
         self.dy = 0
+        self.life = 5
     
     # 움직임
     def update(self):
@@ -151,9 +152,12 @@ def game_loop():
     # pygame.mixer.music.play(-1)
     fps_clock = pygame.time.Clock()
 
-    p1_fighter = Fighter(0, 840)
-    p2_fighter = Fighter(840, 1680)
     missiles = pygame.sprite.Group()
+    fighters = pygame.sprite.Group()
+    p1_fighter = Fighter(0, 840, 'fighter1.png')
+    p2_fighter = Fighter(840, 1680, 'fighter2.png')
+    fighters.add(p1_fighter, p2_fighter)
+    print(fighters.spritedict)
     # rocks = pygame.sprite.Group()
 
     # occur_prob = 40
@@ -257,6 +261,19 @@ def game_loop():
             if rock.out_of_screen():
                 rock.kill()
                 count_missed += 1
+        
+        for fighter in fighters:
+            rock = fighter.collide(rocks)
+            if rock:
+                fighter.life -= 1
+                rock.kill()
+                occur_explosion(screen, fighter.rect.x, fighter.rect.y)
+                if fighter.life <= 0:
+                    pygame.mixer_music.stop()
+                    pygame.display.update()
+                    # gameover_sound.play()
+                    time.sleep(1)
+                    running = False
 
         rocks.update()
         rocks.draw(screen)
@@ -269,21 +286,6 @@ def game_loop():
         pygame.display.flip()
 
         # 게임 오버 조건
-        if p1_fighter.collide(rocks) or count_missed >= 3:
-            pygame.mixer_music.stop()
-            occur_explosion(screen, p1_fighter.rect.x, p1_fighter.rect.y)
-            pygame.display.update()
-            # gameover_sound.play()
-            time.sleep(1)
-            running = False
-
-        if p2_fighter.collide(rocks) or count_missed >= 3:
-            pygame.mixer_music.stop()
-            occur_explosion(screen, p2_fighter.rect.x, p2_fighter.rect.y)
-            pygame.display.update()
-            # gameover_sound.play()
-            time.sleep(1)
-            running = False
 
         if elapsed_time >= 180:
             running = False
