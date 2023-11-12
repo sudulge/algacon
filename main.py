@@ -37,17 +37,19 @@ class Fighter(pygame.sprite.Sprite):
         self.life = 5
         self.invincible = False
         self.invincible_time = None
+        self.speed = 1
+        self.speedup_time = None
     
     # 움직임
     def update(self):
-        self.rect.x += self.dx
-        self.rect.y += self.dy
+        self.rect.x += self.dx * self.speed
+        self.rect.y += self.dy * self.speed
 
         if self.rect.x < self.border_left or self.rect.x + self.rect.width > self.border_right:
-            self.rect.x -= self.dx
+            self.rect.x -= self.dx * self.speed
         
         if self.rect.y < 0 or self.rect.y + self.rect.height > WINDOW_HEIGHT:
-            self.rect.y -= self.dy
+            self.rect.y -= self.dy * self.speed
     
     def draw(self, screen):
         screen.blit(self.image, self.rect)
@@ -141,6 +143,9 @@ class Heal(Item):
     def __init__(self, xpos, ypos, speed):
         super().__init__(xpos, ypos, speed, 'heart')
 
+class SpeedUp(Item):
+    def __init__(self, xpos, ypos, speed):
+        super().__init__(xpos, ypos, speed, 'speedup')
         
 # 텍스트 보여주는 함수
 def draw_text(text, font, surface, x, y, main_color):
@@ -261,6 +266,9 @@ def game_loop():
         elif probablity_num > 195:
             heal = Heal(random.randint(0, WINDOW_WIDTH - 30), 0, 20)
             heal.add(items)
+        elif probablity_num > 194:
+            speedup = SpeedUp(random.randint(0, WINDOW_WIDTH - 30), 0, 20)
+            speedup.add(items)
         
         draw_text(f'파괴한 운석: {shot_count}', default_font, screen, 100, 20, (255, 255, 255))
         draw_text(f'놓친 운석: {count_missed}', default_font, screen, 400, 20, (255, 0, 0))
@@ -295,6 +303,12 @@ def game_loop():
                     fighter.invincible = False
                     fighter.invincible_time = None
                     fighter.image = pygame.image.load(f'src/{fighter.name}.png')
+            
+            if fighter.speed > 1:
+                if (pygame.time.get_ticks() - fighter.speedup_time) / 1000 >= 5:
+                    fighter.speed = 1
+                    fighter.speedup_time = None
+                    fighter.image = pygame.image.load(f'src/{fighter.name}.png')
 
             rock = fighter.collide(rocks)
             if rock:
@@ -313,6 +327,10 @@ def game_loop():
                 if type(item).__name__ == 'Heal':
                     if fighter.life < 5:
                         fighter.life += 1
+                elif type(item).__name__ == 'SpeedUp':
+                    fighter.speed += 1
+                    fighter.speedup_time = pygame.time.get_ticks()
+                    fighter.image = pygame.image.load(f'src/{fighter.name}_speedup.png')
             
         for i in range(1, 6):
             if p1_fighter.life >= i:
