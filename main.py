@@ -20,8 +20,9 @@ rocks = pygame.sprite.Group()
 
 # 전투기 클래스 정의
 class Fighter(pygame.sprite.Sprite):
-    def __init__(self, border_left, border_right, image):
+    def __init__(self, border_left, border_right, name, image):
         super(Fighter, self).__init__()
+        self.name = name
         self.image = pygame.image.load(f'src/{image}')
         self.border_left = border_left
         self.border_right = border_right
@@ -154,10 +155,9 @@ def game_loop():
 
     missiles = pygame.sprite.Group()
     fighters = pygame.sprite.Group()
-    p1_fighter = Fighter(0, 840, 'fighter1.png')
-    p2_fighter = Fighter(840, 1680, 'fighter2.png')
+    p1_fighter = Fighter(0, 840, 'p1', 'fighter1.png')
+    p2_fighter = Fighter(840, 1680, 'p2', 'fighter2.png')
     fighters.add(p1_fighter, p2_fighter)
-    print(fighters.spritedict)
     # rocks = pygame.sprite.Group()
 
     # occur_prob = 40
@@ -268,12 +268,33 @@ def game_loop():
                 fighter.life -= 1
                 rock.kill()
                 occur_explosion(screen, fighter.rect.x, fighter.rect.y)
-                if fighter.life <= 0:
-                    pygame.mixer_music.stop()
-                    pygame.display.update()
-                    # gameover_sound.play()
-                    time.sleep(1)
-                    running = False
+
+        for i in range(1, 6):
+            if p1_fighter.life >= i:
+                heart = pygame.image.load('src/heart.png')
+                screen.blit(heart, ((i-1)*50 + 10, WINDOW_HEIGHT - 50))
+            elif p1_fighter.life < i:
+                brokenheart = pygame.image.load('src/brokenheart.png')
+                screen.blit(brokenheart, ((i-1)*50 + 10, WINDOW_HEIGHT - 50))
+
+            if p2_fighter.life >= i:
+                heart = pygame.image.load('src/heart.png')
+                screen.blit(heart, (WINDOW_WIDTH - (i)*50, WINDOW_HEIGHT - 50))
+            elif p2_fighter.life < i:
+                brokenheart = pygame.image.load('src/brokenheart.png')
+                screen.blit(brokenheart, (WINDOW_WIDTH - (i)*50, WINDOW_HEIGHT - 50))
+
+        # 충돌시 life가 0개면 하트 이미지가 업데이트 안돼서 나눠놓음
+        for fighter in fighters:
+            if fighter.life <= 0:
+                pygame.mixer_music.stop()
+                pygame.display.update()
+                # gameover_sound.play()
+                rocks.empty()
+                fighters.empty()
+                missiles.empty()
+                time.sleep(1)
+                running = False
 
         rocks.update()
         rocks.draw(screen)
