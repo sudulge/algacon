@@ -20,10 +20,10 @@ rocks = pygame.sprite.Group()
 
 # 전투기 클래스 정의
 class Fighter(pygame.sprite.Sprite):
-    def __init__(self, border_left, border_right, name, image):
+    def __init__(self, border_left, border_right, name):
         super(Fighter, self).__init__()
         self.name = name
-        self.image = pygame.image.load(f'src/{image}')
+        self.image = pygame.image.load(f'src/{name}.png')
         self.border_left = border_left
         self.border_right = border_right
         self.rect = self.image.get_rect()
@@ -149,7 +149,7 @@ def occur_explosion(surface, x, y):
 # 게임 진행 루프
 def game_loop():
     default_font = pygame.font.Font('src/NanumGothic.ttf', 28)
-    background_image = pygame.image.load('src/background.png')
+    background_image = pygame.image.load('src/background_ingame.png')
     gameover_sound = pygame.mixer.Sound('src/gameover.wav')
     # pygame.mixer.music.load('src/music.wav')
     # pygame.mixer.music.play(-1)
@@ -157,8 +157,8 @@ def game_loop():
 
     missiles = pygame.sprite.Group()
     fighters = pygame.sprite.Group()
-    p1_fighter = Fighter(0, 840, 'fighter1', 'fighter1.png')
-    p2_fighter = Fighter(840, 1680, 'fighter2', 'fighter2.png')
+    p1_fighter = Fighter(0, 840, 'fighter1')
+    p2_fighter = Fighter(840, 1680, 'fighter2')
     fighters.add(p1_fighter, p2_fighter)
     # rocks = pygame.sprite.Group()
 
@@ -332,7 +332,7 @@ def game_loop():
 
 # 게임 메뉴(시작) 화면
 def game_menu():
-    start_image = pygame.image.load('src/background.png')
+    start_image = pygame.image.load('src/background_menu.png')
     screen.blit(start_image, [0, 0])
     draw_x = int(WINDOW_WIDTH / 2)
     draw_y = int(WINDOW_HEIGHT / 4)
@@ -357,7 +357,7 @@ def game_menu():
 
 # 시간초과 화면
 def time_end():
-    start_image = pygame.image.load('src/background.png')
+    start_image = pygame.image.load('src/background_menu.png')
     screen.blit(start_image, [0, 0])
     draw_x = int(WINDOW_WIDTH / 2)
     draw_y = int(WINDOW_HEIGHT / 4)
