@@ -32,6 +32,8 @@ class Fighter(pygame.sprite.Sprite):
         self.dx = 0
         self.dy = 0
         self.life = 5
+        self.invincible = False
+        self.invincible_time = None
     
     # 움직임
     def update(self):
@@ -155,8 +157,8 @@ def game_loop():
 
     missiles = pygame.sprite.Group()
     fighters = pygame.sprite.Group()
-    p1_fighter = Fighter(0, 840, 'p1', 'fighter1.png')
-    p2_fighter = Fighter(840, 1680, 'p2', 'fighter2.png')
+    p1_fighter = Fighter(0, 840, 'fighter1', 'fighter1.png')
+    p2_fighter = Fighter(840, 1680, 'fighter2', 'fighter2.png')
     fighters.add(p1_fighter, p2_fighter)
     # rocks = pygame.sprite.Group()
 
@@ -263,12 +265,24 @@ def game_loop():
                 count_missed += 1
         
         for fighter in fighters:
+
+            if fighter.invincible:
+                if (pygame.time.get_ticks() - fighter.invincible_time) / 1000 >= 2:
+                    fighter.invincible = False
+                    fighter.invincible_time = None
+                    fighter.image = pygame.image.load(f'src/{fighter.name}.png')
+
             rock = fighter.collide(rocks)
             if rock:
-                fighter.life -= 1
                 rock.kill()
                 occur_explosion(screen, fighter.rect.x, fighter.rect.y)
 
+                if not fighter.invincible:
+                    fighter.life -= 1
+                    fighter.invincible = True
+                    fighter.invincible_time = pygame.time.get_ticks()
+                    fighter.image = pygame.image.load('src/invincible.png')
+                
         for i in range(1, 6):
             if p1_fighter.life >= i:
                 heart = pygame.image.load('src/heart.png')
