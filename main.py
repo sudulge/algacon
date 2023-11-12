@@ -19,6 +19,8 @@ FPS = 60
 rocks = pygame.sprite.Group()
 rock_images = [f'rock{i:02d}' for i in range(1, 5)]
 
+items = pygame.sprite.Group()
+
 # 전투기 클래스 정의
 class Fighter(pygame.sprite.Sprite):
     def __init__(self, border_left, border_right, name):
@@ -119,12 +121,27 @@ class UnbreakableRock(Rock):
 
 # 아이템 클래스 정의
 class Item(pygame.sprite.Sprite):
+    def __init__(self, xpos, ypos, speed, image):
+        super(Item, self).__init__()
+
+        self.image = pygame.image.load(f'src/{image}.png')
+        self.rect = self.image.get_rect()
+        self.rect.x = xpos
+        self.rect.y = ypos
+        self.speed = speed
+    
+    def update(self):
+        self.rect.y += self.speed
+    
+    def out_of_screen(self):
+        if self.rect.y > WINDOW_HEIGHT:
+            return True
+        
+class Heal(Item):
     def __init__(self, xpos, ypos, speed):
-        super().__init__(xpos, ypos, speed)
-        
-        
+        super().__init__(xpos, ypos, speed, 'heart')
 
-
+        
 # 텍스트 보여주는 함수
 def draw_text(text, font, surface, x, y, main_color):
     text_obj = font.render(text, True, main_color)
@@ -241,6 +258,9 @@ def game_loop():
                 speed = random.randint(min_rock_speed, max_rock_speed)
                 rock = UnbreakableRock(random.randint(0, WINDOW_WIDTH - 30), 0, speed)
                 rocks.add(rock)
+        elif probablity_num > 195:
+            heal = Heal(random.randint(0, WINDOW_WIDTH - 30), 0, 20)
+            heal.add(items)
         
         draw_text(f'파괴한 운석: {shot_count}', default_font, screen, 100, 20, (255, 255, 255))
         draw_text(f'놓친 운석: {count_missed}', default_font, screen, 400, 20, (255, 0, 0))
@@ -265,8 +285,11 @@ def game_loop():
                 rock.kill()
                 count_missed += 1
         
+        for item in items:
+            if item.out_of_screen():
+                item.kill()
+        
         for fighter in fighters:
-
             if fighter.invincible:
                 if (pygame.time.get_ticks() - fighter.invincible_time) / 1000 >= 2:
                     fighter.invincible = False
@@ -283,7 +306,14 @@ def game_loop():
                     fighter.invincible = True
                     fighter.invincible_time = pygame.time.get_ticks()
                     fighter.image = pygame.image.load('src/invincible.png')
-                
+
+            item = fighter.collide(items)
+            if item:
+                item.kill()
+                if type(item).__name__ == 'Heal':
+                    if fighter.life < 5:
+                        fighter.life += 1
+            
         for i in range(1, 6):
             if p1_fighter.life >= i:
                 heart = pygame.image.load('src/heart.png')
@@ -317,6 +347,8 @@ def game_loop():
         missiles.draw(screen)
         fighters.update()
         fighters.draw(screen)
+        items.update()
+        items.draw(screen)
         pygame.display.flip()
 
         # 게임 오버 조건
