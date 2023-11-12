@@ -22,7 +22,7 @@ rocks = pygame.sprite.Group()
 class Fighter(pygame.sprite.Sprite):
     def __init__(self, border_left, border_right):
         super(Fighter, self).__init__()
-        self.image = pygame.image.load('src/fighter.png')
+        self.image = pygame.image.load('src/fighter1.png')
         self.border_left = border_left
         self.border_right = border_right
         self.rect = self.image.get_rect()
@@ -55,7 +55,7 @@ class Fighter(pygame.sprite.Sprite):
 class Missile(pygame.sprite.Sprite):
     def __init__(self, xpos, ypos, speed):
         super(Missile, self).__init__()
-        self.image = pygame.image.load('src/missile.png')
+        self.image = pygame.image.load('src/missile1.png')
         self.rect = self.image.get_rect()
         self.rect.x = xpos
         self.rect.y = ypos
@@ -80,7 +80,7 @@ class Missile(pygame.sprite.Sprite):
 class Rock(pygame.sprite.Sprite):
     def __init__(self, xpos, ypos, speed):
         super(Rock, self).__init__()
-        rock_images = [f'src/rock{i:02d}.png' for i in range(1, 31)]
+        rock_images = [f'src/rock{i:02d}.png' for i in range(1, 5)]
 
         self.image = pygame.image.load(random.choice(rock_images))
         self.rect = self.image.get_rect()
@@ -105,13 +105,22 @@ class DefaultRock(Rock):
 class SplitRock(Rock):
     def __init__(self, xpos, ypos, speed):
         super().__init__(xpos, ypos, speed)
+        self.image = pygame.image.load('src/splitrock.png')
 
     def split(self):
         speed = self.speed + 10
         rock1 = DefaultRock(self.rect.x - 50, self.rect.y + 5, speed)
+        rock1.image = pygame.image.load('src/splitedrock_l.png')
         rock2 = DefaultRock(self.rect.x + 50, self.rect.y + 5, speed)
+        rock2.image = pygame.image.load('src/splitedrock_r.png')
         rocks.add(rock1)
         rocks.add(rock2)
+
+# 부서지지 않는 운석
+class UnbreakableRock(Rock):
+    def __init__(self, xpos, ypos, speed):
+        super().__init__(xpos, ypos, speed)
+        self.image = pygame.image.load('src/unbreakablerock.png')
 
 # 텍스트 보여주는 함수
 def draw_text(text, font, surface, x, y, main_color):
@@ -206,20 +215,26 @@ def game_loop():
         # 운석 등장 횟수(확률) 조정 
         occur_of_default_rocks = 3 + int(shot_count / 10)
         occur_of_split_rocks = occur_of_default_rocks - 1
+        occur_of_unbreakable_rocks = occur_of_default_rocks - 2
         min_rock_speed = 1 + int(shot_count / 200)
         max_rock_speed = 1 + int(shot_count / 100)
 
-        probablity_num = random.randint(1, 100)
+        probablity_num = random.randint(1, 200)
 
-        if probablity_num > 99:
+        if probablity_num > 198:
             for i in range(occur_of_default_rocks):
                 speed = random.randint(min_rock_speed, max_rock_speed)
                 rock = DefaultRock(random.randint(0, WINDOW_WIDTH - 30), 0, speed)
                 rocks.add(rock)
-        elif probablity_num > 98:
+        elif probablity_num > 197:
             for i in range(occur_of_split_rocks):
                 speed = random.randint(min_rock_speed, max_rock_speed)
                 rock = SplitRock(random.randint(0, WINDOW_WIDTH - 30), 0, speed)
+                rocks.add(rock)
+        elif probablity_num > 196:
+            for i in range(occur_of_unbreakable_rocks):
+                speed = random.randint(min_rock_speed, max_rock_speed)
+                rock = UnbreakableRock(random.randint(0, WINDOW_WIDTH - 30), 0, speed)
                 rocks.add(rock)
         
         draw_text(f'파괴한 운석: {shot_count}', default_font, screen, 100, 20, (255, 255, 255))
@@ -231,6 +246,8 @@ def game_loop():
             if rock:
                 if type(rock).__name__ == 'SplitRock':
                     rock.split()
+                elif type(rock).__name__ == 'UnbreakableRock':
+                    continue
                 missile.kill()
                 rock.kill()
                 occur_explosion(screen, rock.rect.x, rock.rect.y)
