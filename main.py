@@ -92,6 +92,7 @@ class Rock(pygame.sprite.Sprite):
         self.rect.x = xpos
         self.rect.y = ypos
         self.speed = speed
+        self.life = 2
 
     def update(self):
         self.rect.y += self.speed
@@ -250,14 +251,16 @@ def game_loop():
         for missile in missiles:
             rock = missile.collide(rocks)
             if rock:
-                if type(rock).__name__ == 'SplitRock':
-                    rock.split()
-                elif type(rock).__name__ == 'UnbreakableRock':
+                if type(rock).__name__ == 'UnbreakableRock':
                     continue
+                rock.life -= 1
                 missile.kill()
-                rock.kill()
-                occur_explosion(screen, rock.rect.x, rock.rect.y)
-                shot_count += 1
+                if rock.life <= 0:
+                    if type(rock).__name__ == 'SplitRock':
+                        rock.split()
+                    rock.kill()
+                    occur_explosion(screen, rock.rect.x, rock.rect.y)
+                    shot_count += 1
 
         for rock in rocks:
             if rock.out_of_screen():
