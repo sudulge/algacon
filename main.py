@@ -193,8 +193,6 @@ def game_loop():
     fighters.add(p1_fighter, p2_fighter)
 
 
-    shot_count = 0
-
     # 타이머 설정
     start_ticks = pygame.time.get_ticks()
 
@@ -236,14 +234,23 @@ def game_loop():
                     missiles.add(missile)
 
             if event.type == pygame.KEYUP:
-                if event.key == pygame.K_a or event.key == pygame.K_d:
-                    p1_fighter.dx = 0
-                elif event.key == pygame.K_w or event.key == pygame.K_s:
-                    p1_fighter.dy = 0
-                elif event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
-                    p2_fighter.dx = 0
-                elif event.key == pygame.K_UP or event.key == pygame.K_DOWN:
-                    p2_fighter.dy = 0
+                if event.key == pygame.K_a:
+                    p1_fighter.dx += 10
+                elif event.key == pygame.K_d:
+                    p1_fighter.dx -= 10
+                elif event.key == pygame.K_w:
+                    p1_fighter.dy += 10
+                elif event.key == pygame.K_s:
+                    p1_fighter.dy -= 10
+
+                elif event.key == pygame.K_LEFT:
+                    p2_fighter.dx += 10
+                elif event.key == pygame.K_RIGHT:
+                    p2_fighter.dx -= 10
+                elif event.key == pygame.K_UP:
+                    p2_fighter.dy += 10
+                elif event.key == pygame.K_DOWN:
+                    p2_fighter.dy -= 10
 
         screen.blit(background_image, background_image.get_rect())
 
@@ -288,7 +295,6 @@ def game_loop():
                 powerup = PowerUp(random.randint(i*840, (i+1)*840 - 50), 0, 20)
                 powerup.add(items)
         
-        draw_text(f'파괴한 운석: {shot_count}', default_font, screen, 100, 20, (255, 255, 255))
         draw_text(f'{180 - elapsed_time}', pygame.font.Font('src/NanumGothic.ttf', 60), screen, 840, 30, (255, 255, 255))
 
         for missile in missiles:
@@ -303,7 +309,6 @@ def game_loop():
                         rock.split()
                     rock.kill()
                     occur_explosion(screen, rock.rect.x, rock.rect.y)
-                    shot_count += 1
 
         for rock in rocks:
             if rock.out_of_screen():
