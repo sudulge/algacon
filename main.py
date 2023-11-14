@@ -1,5 +1,4 @@
-# TODO: 
-#       게임 오버화면 - p1, p2 각각 승리화면
+# TODO: 메인메뉴, 게임방법, 전투기선택, 게임 오버화면 - p1, p2 각각 승리화면
 
 import pygame
 import random
@@ -70,7 +69,7 @@ class Missile(pygame.sprite.Sprite):
         self.fighter = fighter
         self.image = pygame.image.load(f'src/missile{self.fighter.power}.png')
         self.rect = self.image.get_rect()
-        self.rect.x = xpos
+        self.rect.x = xpos - self.rect.width // 2
         self.rect.y = ypos
         self.speed = self.fighter.power * 10
 
@@ -355,7 +354,7 @@ def game_loop():
                     if fighter.life < 5:
                         fighter.life += 1
                 elif type(item).__name__ == 'SpeedUp':
-                    fighter.speed = 2
+                    fighter.speed = 1.6
                     fighter.speedup_time = pygame.time.get_ticks()
                     fighter.image = pygame.image.load(f'src/{fighter.name}_speedup.png')
                 elif type(item).__name__ == 'PowerUp':
@@ -386,6 +385,7 @@ def game_loop():
                 rocks.empty()
                 fighters.empty()
                 missiles.empty()
+                items.empty()
                 time.sleep(1)
                 running = False
 
