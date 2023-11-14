@@ -388,9 +388,11 @@ def game_menu():
     font_70 = pygame.font.Font('src/NanumGothic.ttf', 70)
     font_40 = pygame.font.Font('src/NanumGothic.ttf', 40)
 
-    draw_text('지구를 지켜라!', font_70, screen, draw_x, draw_y, (0, 255, 255))
+    draw_text('~ 운석 뿌셔뿌셔 ~', font_70, screen, draw_x, draw_y + 100, (0, 255, 255))
     draw_text('엔터 키를 누르면', font_40, screen, draw_x, draw_y + 200, (255, 255, 255))
     draw_text('게임이 시작됩니다', font_40, screen, draw_x, draw_y + 250, (255, 255, 255))
+    draw_text('17조 훈민훈수', font_40, screen, draw_x, draw_y + 350, (255, 255, 255))
+    draw_text('김동훈 박지민 이태훈 홍혁수', font_40, screen, draw_x, draw_y + 400, (255, 255, 255))
 
     pygame.display.update()
 
@@ -434,7 +436,7 @@ def main():
     pygame.init()
     
     screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-    pygame.display.set_caption('PyShooting')
+    pygame.display.set_caption('~ 운석 뿌셔뿌셔 ~')
 
     # 현재 action 에 따라서 게임 화면 구성
     # 메인 메뉴 화면으로 시작
