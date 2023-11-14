@@ -19,6 +19,8 @@ rock_images = [f'rock{i:02d}' for i in range(1, 5)]
 
 items = pygame.sprite.Group()
 
+selected_menu = 1
+
 # 전투기 클래스 정의
 class Fighter(pygame.sprite.Sprite):
     def __init__(self, border_left, border_right, name):
@@ -411,29 +413,33 @@ def game_loop():
 
 # 게임 메뉴(시작) 화면
 def game_menu():
-    start_image = pygame.image.load('src/background_menu.png')
-    screen.blit(start_image, [0, 0])
-    draw_x = int(WINDOW_WIDTH / 2)
-    draw_y = int(WINDOW_HEIGHT / 4)
-    font_70 = pygame.font.Font('src/NanumGothic.ttf', 70)
-    font_40 = pygame.font.Font('src/NanumGothic.ttf', 40)
-
-    draw_text('~ 운석 뿌셔뿌셔 ~', font_70, screen, draw_x, draw_y + 100, (0, 255, 255))
-    draw_text('엔터 키를 누르면', font_40, screen, draw_x, draw_y + 200, (255, 255, 255))
-    draw_text('게임이 시작됩니다', font_40, screen, draw_x, draw_y + 250, (255, 255, 255))
-    draw_text('17조 훈민훈수', font_40, screen, draw_x, draw_y + 350, (255, 255, 255))
-    draw_text('김동훈 박지민 이태훈 홍혁수', font_40, screen, draw_x, draw_y + 400, (255, 255, 255))
+    global selected_menu
+    background_menu = pygame.image.load(f'src/menu{selected_menu}.png')
+    screen.blit(background_menu, [0, 0])
 
     pygame.display.update()
 
     for event in pygame.event.get():
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
-                return 'play'
+                if selected_menu == 1:
+                    return 'play'
+                elif selected_menu == 2:
+                    return 'howtoplay'
+                elif selected_menu == 3:
+                    return 'quit'
             
+            # 메뉴이동
+            elif event.key == pygame.K_UP:
+                if selected_menu > 1:
+                    selected_menu -= 1
+            elif event.key == pygame.K_DOWN:
+                if selected_menu < 3:
+                    selected_menu += 1
+
         if event.type == pygame.QUIT:
             return 'quit'
-        
+    
     return 'game_menu'
 
 # 시간초과 화면
