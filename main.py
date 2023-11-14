@@ -1,4 +1,4 @@
-# TODO: 메인메뉴, 게임방법, 전투기선택, 게임 오버화면 - p1, p2 각각 승리화면
+# TODO: 게임방법이미지 변경, 전투기선택, 게임 오버화면 - p1, p2 각각 승리화면
 
 import pygame
 import random
@@ -179,6 +179,7 @@ def occur_explosion(surface, x, y):
 
 # 게임 진행 루프
 def game_loop():
+    global selected_menu
     default_font = pygame.font.Font('src/NanumGothic.ttf', 28)
     background_image = pygame.image.load('src/background_ingame.png')
     gameover_sound = pygame.mixer.Sound('src/gameover.wav')
@@ -409,6 +410,14 @@ def game_loop():
         
         fps_clock.tick(FPS)
 
+    pygame.mixer_music.stop()
+    pygame.display.update()
+    # gameover_sound.play()
+    rocks.empty()
+    fighters.empty()
+    missiles.empty()
+    items.empty()
+    selected_menu = 1
     return 'game_menu'
 
 # 게임 메뉴(시작) 화면
@@ -425,7 +434,7 @@ def game_menu():
                 if selected_menu == 1:
                     return 'play'
                 elif selected_menu == 2:
-                    return 'howtoplay'
+                    return 'how_to_play'
                 elif selected_menu == 3:
                     return 'quit'
             
@@ -442,10 +451,27 @@ def game_menu():
     
     return 'game_menu'
 
+# 게임방법 화면
+def how_to_play():
+    how_to_play_image = pygame.image.load('src/howtoplay.png')
+    screen.blit(how_to_play_image, [0, 0])
+
+    pygame.display.update()
+
+    for event in pygame.event.get():
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_RETURN:
+                return 'play'
+            
+        if event.type == pygame.QUIT:
+            return 'quit'
+    
+    return 'how_to_play'
+
 # 시간초과 화면
 def time_end():
-    start_image = pygame.image.load('src/background_menu.png')
-    screen.blit(start_image, [0, 0])
+    background_image = pygame.image.load('src/background_menu.png')
+    screen.blit(background_image, [0, 0])
     draw_x = int(WINDOW_WIDTH / 2)
     draw_y = int(WINDOW_HEIGHT / 4)
     font_70 = pygame.font.Font('src/NanumGothic.ttf', 70)
@@ -481,6 +507,8 @@ def main():
     while action != 'quit':
         if action == 'game_menu':
             action = game_menu()
+        elif action == 'how_to_play':
+            action = how_to_play()
         elif action == 'play':
             action = game_loop()
         elif action == 'time_end':
