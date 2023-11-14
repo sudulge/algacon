@@ -66,6 +66,7 @@ class Missile(pygame.sprite.Sprite):
     def __init__(self, xpos, ypos, fighter):
         super(Missile, self).__init__()
         self.sound = pygame.mixer.Sound('src/missile.wav')
+        self.sound.set_volume(0.2)
         self.fighter = fighter
         self.image = pygame.image.load(f'src/missile{self.fighter.power}.png')
         self.rect = self.image.get_rect()
@@ -129,6 +130,8 @@ class Item(pygame.sprite.Sprite):
         super(Item, self).__init__()
 
         self.image = pygame.image.load(f'src/{image}.png')
+        self.sound = pygame.mixer.Sound('src/item.mp3')
+        self.sound.set_volume(0.7)
         self.rect = self.image.get_rect()
         self.rect.x = xpos
         self.rect.y = ypos
@@ -178,8 +181,9 @@ def game_loop():
     default_font = pygame.font.Font('src/NanumGothic.ttf', 28)
     background_image = pygame.image.load('src/background_ingame.png')
     gameover_sound = pygame.mixer.Sound('src/gameover.wav')
-    # pygame.mixer.music.load('src/music.wav')
-    # pygame.mixer.music.play(-1)
+    pygame.mixer.music.load('src/background_music.mp3')
+    pygame.mixer.music.set_volume(0.3)
+    pygame.mixer.music.play(-1)
     fps_clock = pygame.time.Clock()
 
     missiles = pygame.sprite.Group()
@@ -187,9 +191,8 @@ def game_loop():
     p1_fighter = Fighter(0, 840, 'fighter1')
     p2_fighter = Fighter(840, 1680, 'fighter2')
     fighters.add(p1_fighter, p2_fighter)
-    # rocks = pygame.sprite.Group()
 
-    # occur_prob = 40
+
     shot_count = 0
 
     # 타이머 설정
@@ -341,6 +344,7 @@ def game_loop():
 
             item = fighter.collide(items)
             if item:
+                item.sound.play()
                 item.kill()
                 if type(item).__name__ == 'Heal':
                     if fighter.life < 5:
