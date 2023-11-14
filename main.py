@@ -71,8 +71,8 @@ class Missile(pygame.sprite.Sprite):
         self.fighter = fighter
         self.image = pygame.image.load(f'src/missile{self.fighter.power}.png')
         self.rect = self.image.get_rect()
-        self.rect.x = xpos - self.rect.width // 2
-        self.rect.y = ypos
+        self.rect.centerx = xpos
+        self.rect.centery = ypos
         self.speed = self.fighter.power * 10
 
     def launch(self):
@@ -96,8 +96,8 @@ class Rock(pygame.sprite.Sprite):
 
         self.image = pygame.image.load(f'src/{image}.png')
         self.rect = self.image.get_rect()
-        self.rect.x = xpos
-        self.rect.y = ypos
+        self.rect.centerx = xpos
+        self.rect.centery = ypos
         self.speed = speed
         self.life = 2
 
@@ -115,8 +115,8 @@ class SplitRock(Rock):
 
     def split(self):
         speed = self.speed + 10
-        rock1 = Rock(self.rect.x - 50, self.rect.y + 5, speed, 'splitedrock_l')
-        rock2 = Rock(self.rect.x + 50, self.rect.y + 5, speed, 'splitedrock_r')
+        rock1 = Rock(self.rect.centerx - 50, self.rect.y + 5, speed, 'splitedrock_l')
+        rock2 = Rock(self.rect.centerx + 50, self.rect.y + 5, speed, 'splitedrock_r')
         rocks.add(rock1)
         rocks.add(rock2)
 
@@ -134,8 +134,8 @@ class Item(pygame.sprite.Sprite):
         self.sound = pygame.mixer.Sound('src/item.mp3')
         self.sound.set_volume(0.7)
         self.rect = self.image.get_rect()
-        self.rect.x = xpos
-        self.rect.y = ypos
+        self.rect.centerx = xpos
+        self.rect.centery = ypos
         self.speed = speed
     
     def update(self):
@@ -169,8 +169,8 @@ def draw_text(text, font, surface, x, y, main_color):
 def occur_explosion(surface, x, y):
     explosion_image = pygame.image.load('src/explosion.png')
     explosion_rect = explosion_image.get_rect()
-    explosion_rect.x = x
-    explosion_rect.y = y
+    explosion_rect.centerx = x
+    explosion_rect.centery = y
     surface.blit(explosion_image, explosion_rect)
     
     # explosion_sounds = [f'src/explosion{i:02d}.wav' for i in range(1, 4)]
@@ -269,31 +269,31 @@ def game_loop():
             for i in range(2):
                 for j in range(occur_of_default_rocks):
                     speed = random.randint(min_rock_speed, max_rock_speed)
-                    rock = Rock(random.randint(i*840, (i+1)*840 - 70), 0, speed, random.choice(rock_images))
+                    rock = Rock(random.randint(i*840, (i+1)*840), 0, speed, random.choice(rock_images))
                     rocks.add(rock)
         elif probablity_num > 985:  # 5 / 1000  0.5%
             for i in range(2):
                 for j in range(occur_of_split_rocks):
                     speed = random.randint(min_rock_speed, max_rock_speed)
-                    rock = SplitRock(random.randint(i*840, (i+1)*840 - 70), 0, speed)
+                    rock = SplitRock(random.randint(i*840, (i+1)*840), 0, speed)
                     rocks.add(rock)
         elif probablity_num > 980:  # 5 / 1000  0.5%
             for i in range(2):
                 for j in range(occur_of_unbreakable_rocks):
                     speed = random.randint(min_rock_speed, max_rock_speed)
-                    rock = UnbreakableRock(random.randint(i*840, (i+1)*840 - 70), 0, speed)
+                    rock = UnbreakableRock(random.randint(i*840, (i+1)*840), 0, speed)
                     rocks.add(rock)
         elif probablity_num > 978:  # 2 / 1000  0.2%
             for i in range(2):
-                heal = Heal(random.randint(i*840, (i+1)*840 - 50), 0, 20)
+                heal = Heal(random.randint(i*840, (i+1)*840), 0, 20)
                 heal.add(items)
         elif probablity_num > 973:  # 5 / 1000  0.5% 
             for i in range(2):
-                speedup = SpeedUp(random.randint(i*840, (i+1)*840 - 50), 0, 20)
+                speedup = SpeedUp(random.randint(i*840, (i+1)*840), 0, 20)
                 speedup.add(items)
         elif probablity_num > 970:
             for i in range(2):
-                powerup = PowerUp(random.randint(i*840, (i+1)*840 - 50), 0, 20)
+                powerup = PowerUp(random.randint(i*840, (i+1)*840), 0, 20)
                 powerup.add(items)
         
         draw_text(f'{180 - elapsed_time}', pygame.font.Font('src/NanumGothic.ttf', 60), screen, 840, 30, (255, 255, 255))
@@ -309,7 +309,7 @@ def game_loop():
                     if type(rock).__name__ == 'SplitRock':
                         rock.split()
                     rock.kill()
-                    occur_explosion(screen, rock.rect.x, rock.rect.y)
+                    occur_explosion(screen, rock.rect.centerx, rock.rect.centery)
 
         for rock in rocks:
             if rock.out_of_screen():
@@ -340,7 +340,7 @@ def game_loop():
             rock = fighter.collide(rocks)
             if rock:
                 rock.kill()
-                occur_explosion(screen, fighter.rect.x, fighter.rect.y)
+                occur_explosion(screen, fighter.rect.centerx, fighter.rect.centery)
 
                 if not fighter.invincible:
                     fighter.life -= 1
