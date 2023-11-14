@@ -92,7 +92,7 @@ class Rock(pygame.sprite.Sprite):
 
         self.image = pygame.image.load(f'src/{image}.png')
         self.rect = self.image.get_rect()
-        self.rect.x = xpos
+        self.rect.x = xpos + (self.rect.width // 2)
         self.rect.y = ypos
         self.speed = speed
         self.life = 2
@@ -185,7 +185,6 @@ def game_loop():
 
     # occur_prob = 40
     shot_count = 0
-    count_missed = 0
 
     # 타이머 설정
     start_ticks = pygame.time.get_ticks()
@@ -239,39 +238,44 @@ def game_loop():
 
         screen.blit(background_image, background_image.get_rect())
 
-        # 운석 등장 횟수(확률) 조정 
-        occur_of_default_rocks = 3 + int(shot_count / 10)
+        # 한번에 등장하는 운석 개수
+        occur_of_default_rocks = 3 + int(elapsed_time // 20)
         occur_of_split_rocks = occur_of_default_rocks - 1
         occur_of_unbreakable_rocks = occur_of_default_rocks - 2
-        min_rock_speed = 1 + int(shot_count / 200)
-        max_rock_speed = 1 + int(shot_count / 100)
+        min_rock_speed = 3 + int(elapsed_time // 20)
+        max_rock_speed = 3 + int(elapsed_time // 10)
 
-        probablity_num = random.randint(1, 200)
+        probablity_num = random.randint(1, 1000)
+        # 운석, 아이템 등장 확률 조정
 
-        if probablity_num > 198:
-            for i in range(occur_of_default_rocks):
-                speed = random.randint(min_rock_speed, max_rock_speed)
-                rock = Rock(random.randint(0, WINDOW_WIDTH - 30), 0, speed, random.choice(rock_images))
-                rocks.add(rock)
-        elif probablity_num > 197:
-            for i in range(occur_of_split_rocks):
-                speed = random.randint(min_rock_speed, max_rock_speed)
-                rock = SplitRock(random.randint(0, WINDOW_WIDTH - 30), 0, speed)
-                rocks.add(rock)
-        elif probablity_num > 196:
-            for i in range(occur_of_unbreakable_rocks):
-                speed = random.randint(min_rock_speed, max_rock_speed)
-                rock = UnbreakableRock(random.randint(0, WINDOW_WIDTH - 30), 0, speed)
-                rocks.add(rock)
-        elif probablity_num > 195:
-            heal = Heal(random.randint(0, WINDOW_WIDTH - 30), 0, 20)
-            heal.add(items)
-        elif probablity_num > 194:
-            speedup = SpeedUp(random.randint(0, WINDOW_WIDTH - 30), 0, 20)
-            speedup.add(items)
+        if probablity_num > 990:  # 10 / 1000  1%
+            for i in range(2):
+                for j in range(occur_of_default_rocks):
+                    speed = random.randint(min_rock_speed, max_rock_speed)
+                    rock = Rock(random.randint(i*840, (i+1)*840), 0, speed, random.choice(rock_images))
+                    rocks.add(rock)
+        elif probablity_num > 985:  # 5 / 1000  0.5%
+            for i in range(2):
+                for j in range(occur_of_split_rocks):
+                    speed = random.randint(min_rock_speed, max_rock_speed)
+                    rock = SplitRock(random.randint(i*840, (i+1)*840), 0, speed)
+                    rocks.add(rock)
+        elif probablity_num > 980:  # 5 / 1000  0.5%
+            for i in range(2):
+                for j in range(occur_of_unbreakable_rocks):
+                    speed = random.randint(min_rock_speed, max_rock_speed)
+                    rock = UnbreakableRock(random.randint(i*840, (i+1)*840), 0, speed)
+                    rocks.add(rock)
+        elif probablity_num > 978:  # 2 / 1000  0.2%
+            for i in range(2):
+                heal = Heal(random.randint(i*840, (i+1)*840), 0, 20)
+                heal.add(items)
+        elif probablity_num > 973:  # 5 / 1000  0.5% 
+            for i in range(2):
+                speedup = SpeedUp(random.randint(i*840, (i+1)*840), 0, 20)
+                speedup.add(items)
         
         draw_text(f'파괴한 운석: {shot_count}', default_font, screen, 100, 20, (255, 255, 255))
-        draw_text(f'놓친 운석: {count_missed}', default_font, screen, 400, 20, (255, 0, 0))
         draw_text(f'{180 - elapsed_time}', pygame.font.Font('src/NanumGothic.ttf', 60), screen, 840, 30, (255, 255, 255))
 
         for missile in missiles:
@@ -291,7 +295,6 @@ def game_loop():
         for rock in rocks:
             if rock.out_of_screen():
                 rock.kill()
-                count_missed += 1
         
         for item in items:
             if item.out_of_screen():
