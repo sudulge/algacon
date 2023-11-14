@@ -39,6 +39,8 @@ class Fighter(pygame.sprite.Sprite):
         self.invincible_time = None
         self.speed = 1
         self.speedup_time = None
+        self.power = 1
+        self.powerup_time = None
     
     # 움직임
     def update(self):
@@ -62,14 +64,15 @@ class Fighter(pygame.sprite.Sprite):
     
 # 미사일 클래스 정의
 class Missile(pygame.sprite.Sprite):
-    def __init__(self, xpos, ypos, speed):
+    def __init__(self, xpos, ypos, fighter):
         super(Missile, self).__init__()
-        self.image = pygame.image.load('src/missile1.png')
+        self.sound = pygame.mixer.Sound('src/missile.wav')
+        self.fighter = fighter
+        self.image = pygame.image.load(f'src/missile{self.fighter.power}.png')
         self.rect = self.image.get_rect()
         self.rect.x = xpos
         self.rect.y = ypos
-        self.speed = speed
-        self.sound = pygame.mixer.Sound('src/missile.wav')
+        self.speed = self.fighter.power * 10
 
     def launch(self):
         self.sound.play()
@@ -92,7 +95,7 @@ class Rock(pygame.sprite.Sprite):
 
         self.image = pygame.image.load(f'src/{image}.png')
         self.rect = self.image.get_rect()
-        self.rect.x = xpos + (self.rect.width // 2)
+        self.rect.x = xpos
         self.rect.y = ypos
         self.speed = speed
         self.life = 2
@@ -146,6 +149,10 @@ class Heal(Item):
 class SpeedUp(Item):
     def __init__(self, xpos, ypos, speed):
         super().__init__(xpos, ypos, speed, 'speedup')
+
+class PowerUp(Item):
+    def __init__(self, xpos, ypos, speed):
+        super().__init__(xpos, ypos, speed, 'powerup')
         
 # 텍스트 보여주는 함수
 def draw_text(text, font, surface, x, y, main_color):
@@ -209,7 +216,7 @@ def game_loop():
                 elif event.key == pygame.K_s:
                     p1_fighter.dy += 10
                 elif event.key == pygame.K_SPACE:
-                    missile = Missile(p1_fighter.rect.centerx, p1_fighter.rect.y, 10)
+                    missile = Missile(p1_fighter.rect.centerx, p1_fighter.rect.y, p1_fighter)
                     missile.launch()
                     missiles.add(missile)
 
@@ -222,7 +229,7 @@ def game_loop():
                 elif event.key == pygame.K_DOWN:
                     p2_fighter.dy += 10
                 elif event.key == pygame.K_RCTRL:
-                    missile = Missile(p2_fighter.rect.centerx, p2_fighter.rect.y, 10)
+                    missile = Missile(p2_fighter.rect.centerx, p2_fighter.rect.y, p2_fighter)
                     missile.launch()
                     missiles.add(missile)
 
@@ -252,28 +259,32 @@ def game_loop():
             for i in range(2):
                 for j in range(occur_of_default_rocks):
                     speed = random.randint(min_rock_speed, max_rock_speed)
-                    rock = Rock(random.randint(i*840, (i+1)*840), 0, speed, random.choice(rock_images))
+                    rock = Rock(random.randint(i*840, (i+1)*840 - 70), 0, speed, random.choice(rock_images))
                     rocks.add(rock)
         elif probablity_num > 985:  # 5 / 1000  0.5%
             for i in range(2):
                 for j in range(occur_of_split_rocks):
                     speed = random.randint(min_rock_speed, max_rock_speed)
-                    rock = SplitRock(random.randint(i*840, (i+1)*840), 0, speed)
+                    rock = SplitRock(random.randint(i*840, (i+1)*840 - 70), 0, speed)
                     rocks.add(rock)
         elif probablity_num > 980:  # 5 / 1000  0.5%
             for i in range(2):
                 for j in range(occur_of_unbreakable_rocks):
                     speed = random.randint(min_rock_speed, max_rock_speed)
-                    rock = UnbreakableRock(random.randint(i*840, (i+1)*840), 0, speed)
+                    rock = UnbreakableRock(random.randint(i*840, (i+1)*840 - 70), 0, speed)
                     rocks.add(rock)
         elif probablity_num > 978:  # 2 / 1000  0.2%
             for i in range(2):
-                heal = Heal(random.randint(i*840, (i+1)*840), 0, 20)
+                heal = Heal(random.randint(i*840, (i+1)*840 - 50), 0, 20)
                 heal.add(items)
         elif probablity_num > 973:  # 5 / 1000  0.5% 
             for i in range(2):
-                speedup = SpeedUp(random.randint(i*840, (i+1)*840), 0, 20)
+                speedup = SpeedUp(random.randint(i*840, (i+1)*840 - 50), 0, 20)
                 speedup.add(items)
+        elif probablity_num > 970:
+            for i in range(2):
+                powerup = PowerUp(random.randint(i*840, (i+1)*840 - 50), 0, 20)
+                powerup.add(items)
         
         draw_text(f'파괴한 운석: {shot_count}', default_font, screen, 100, 20, (255, 255, 255))
         draw_text(f'{180 - elapsed_time}', pygame.font.Font('src/NanumGothic.ttf', 60), screen, 840, 30, (255, 255, 255))
@@ -283,7 +294,7 @@ def game_loop():
             if rock:
                 if type(rock).__name__ == 'UnbreakableRock':
                     continue
-                rock.life -= 1
+                rock.life -= missile.fighter.power
                 missile.kill()
                 if rock.life <= 0:
                     if type(rock).__name__ == 'SplitRock':
@@ -308,10 +319,15 @@ def game_loop():
                     fighter.image = pygame.image.load(f'src/{fighter.name}.png')
             
             if fighter.speed > 1:
-                if (pygame.time.get_ticks() - fighter.speedup_time) / 1000 >= 5:
+                if (pygame.time.get_ticks() - fighter.speedup_time) / 1000 >= 10:
                     fighter.speed = 1
                     fighter.speedup_time = None
                     fighter.image = pygame.image.load(f'src/{fighter.name}.png')
+            
+            if fighter.power > 1:
+                if (pygame.time.get_ticks() - fighter.powerup_time) / 1000 >= 10:
+                    fighter.power = 1
+                    fighter.powerup_time = None
 
             rock = fighter.collide(rocks)
             if rock:
@@ -322,7 +338,7 @@ def game_loop():
                     fighter.life -= 1
                     fighter.invincible = True
                     fighter.invincible_time = pygame.time.get_ticks()
-                    fighter.image = pygame.image.load('src/invincible.png')
+                    fighter.image = pygame.image.load(f'src/{fighter.name}_invincible.png')
 
             item = fighter.collide(items)
             if item:
@@ -334,6 +350,9 @@ def game_loop():
                     fighter.speed += 1
                     fighter.speedup_time = pygame.time.get_ticks()
                     fighter.image = pygame.image.load(f'src/{fighter.name}_speedup.png')
+                elif type(item).__name__ == 'PowerUp':
+                    fighter.power = 2
+                    fighter.powerup_time = pygame.time.get_ticks()
             
         for i in range(1, 6):
             if p1_fighter.life >= i:
