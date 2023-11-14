@@ -1,5 +1,4 @@
-# TODO: 점수 추가, 각 플레이어 영역에서 운석 등장하게 변경, 점수기준으로 운석 많이 나오게 할건지 시간 기준으로 할건지 변경,
-#       아이템 추가, ;
+# TODO: 
 #       게임 오버화면 - p1, p2 각각 승리화면
 
 import pygame
@@ -347,7 +346,7 @@ def game_loop():
                     if fighter.life < 5:
                         fighter.life += 1
                 elif type(item).__name__ == 'SpeedUp':
-                    fighter.speed += 1
+                    fighter.speed = 2
                     fighter.speedup_time = pygame.time.get_ticks()
                     fighter.image = pygame.image.load(f'src/{fighter.name}_speedup.png')
                 elif type(item).__name__ == 'PowerUp':
