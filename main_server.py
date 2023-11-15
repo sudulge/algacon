@@ -51,6 +51,7 @@ def receive():
 
         if len(clients) == 2:
             print('gamestart')
+            time.sleep(0.5)
             broadcast("GAMESTART".encode('utf-8'))
             thread = threading.Thread(target=game_loop, args=())
             thread.start()

@@ -552,7 +552,7 @@ def consoles():
     global p1_fighter, p2_fighter, missiles, playing
     while True:
         msg = client.recv(1024)
-        print(msg.decode().split("/"))
+        print(msg.decode())
 
         # for i in msg.decode().split("/")[1:]:
         #     generate_object(i[0], i[1], i[2])
