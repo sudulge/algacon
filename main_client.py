@@ -1,4 +1,5 @@
 # TODO: 게임방법이미지 변경, 전투기선택, 게임 오버화면 - p1, p2 각각 승리화면, 점수시스템
+# TODO: multiplay.: 서버 안열려 잇으면 안열려있다고 표시
 
 import pygame
 import random
@@ -22,6 +23,10 @@ rock_images = [f'rock{i:02d}' for i in range(1, 5)]
 items = pygame.sprite.Group()
 
 selected_menu = 1
+
+connect_trying = False
+
+playing = False 
 
 # 전투기 클래스 정의
 class Fighter(pygame.sprite.Sprite):
@@ -443,7 +448,7 @@ def game_menu():
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
                 if selected_menu == 1:
-                    return 'play'
+                    return 'waiting'
                 elif selected_menu == 2:
                     return 'how_to_play'
                 elif selected_menu == 3:
@@ -472,7 +477,7 @@ def how_to_play():
     for event in pygame.event.get():
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
-                return 'play'
+                return 'waiting'
             
         if event.type == pygame.QUIT:
             return 'quit'
@@ -502,9 +507,27 @@ def time_end():
 
     return 'time_end'
 
+# 연결 대기 화면
+def waiting():
+    global connect_trying
+    background_image = pygame.image.load('src/background_waiting.png')
+    screen.blit(background_image, [0, 0])
+
+    pygame.display.update()
+
+    if not connect_trying:
+        acceptC()
+        connect_trying = True
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            return 'quit'
+    
+    return 'waiting'
+
 # 메인 루프
 def main():
-    global screen
+    global screen, action
 
     pygame.init()
     
@@ -524,6 +547,11 @@ def main():
             action = game_loop()
         elif action == 'time_end':
             action = time_end()
+        elif action == 'waiting':
+            if not playing:
+                action = waiting()
+            elif playing:
+                action = game_loop()
 
     pygame.quit()
 
@@ -540,7 +568,7 @@ def acceptC():
     thread.start()
 
 def consoles():
-    global p1_fighter, p2_fighter, missiles
+    global p1_fighter, p2_fighter, missiles, playing
     while True:
         msg = client.recv(1024)
         if msg.decode() == 'left':
@@ -565,8 +593,9 @@ def consoles():
         elif msg.decode() == '_down':
             p1_fighter.dy -= 10
 
+        elif msg.decode() == 'GAMESTART':
+            playing = True
 
 
 if __name__ == "__main__":
-    acceptC()
     main()
