@@ -21,6 +21,8 @@ items = pygame.sprite.Group()
 
 selected_menu = 1
 
+die = None
+
 # 전투기 클래스 정의
 class Fighter(pygame.sprite.Sprite):
     def __init__(self, border_left, border_right, name):
@@ -41,6 +43,7 @@ class Fighter(pygame.sprite.Sprite):
         self.speedup_time = None
         self.power = 1
         self.powerup_time = None
+        self.score = 0
     
     # 움직임
     def update(self):
@@ -179,10 +182,10 @@ def occur_explosion(surface, x, y):
 
 # 게임 진행 루프
 def game_loop():
-    global selected_menu
-    default_font = pygame.font.Font('src/NanumGothic.ttf', 28)
+    global selected_menu, p1_fighter, p2_fighter, die
     background_image = pygame.image.load('src/background_ingame.png')
     gameover_sound = pygame.mixer.Sound('src/gameover.wav')
+    gameover_sound.set_volume(0.1)
     pygame.mixer.music.load('src/background_music.mp3')
     pygame.mixer.music.set_volume(0.3)
     pygame.mixer.music.play(-1)
@@ -298,6 +301,8 @@ def game_loop():
                 powerup.add(items)
         
         draw_text(f'{180 - elapsed_time}', pygame.font.Font('src/NanumGothic.ttf', 60), screen, 840, 30, (255, 255, 255))
+        draw_text(f'{p1_fighter.score}', pygame.font.Font('src/NanumGothic.ttf', 40), screen, 70, 30, (255, 255, 255))
+        draw_text(f'{p2_fighter.score}', pygame.font.Font('src/NanumGothic.ttf', 40), screen, 1610, 30, (255, 255, 255))
 
         for missile in missiles:
             rock = missile.collide(rocks)
@@ -311,6 +316,7 @@ def game_loop():
                         rock.split()
                     rock.kill()
                     occur_explosion(screen, rock.rect.centerx, rock.rect.centery)
+                    missile.fighter.score += 10
 
         for rock in rocks:
             if rock.out_of_screen():
@@ -334,7 +340,7 @@ def game_loop():
                     fighter.image = pygame.image.load(f'src/{fighter.name}.png')
             
             if fighter.power > 1:
-                if (pygame.time.get_ticks() - fighter.powerup_time) / 1000 >= 10:
+                if (pygame.time.get_ticks() - fighter.powerup_time) / 1000 >= 5:
                     fighter.power = 1
                     fighter.powerup_time = None
 
@@ -384,13 +390,15 @@ def game_loop():
             if fighter.life <= 0:
                 pygame.mixer_music.stop()
                 pygame.display.update()
-                # gameover_sound.play()
+                gameover_sound.play()
                 rocks.empty()
                 fighters.empty()
                 missiles.empty()
                 items.empty()
-                time.sleep(1)
+                time.sleep(2)
                 running = False
+                die = fighter
+                return 'game_end'
 
         rocks.update()
         rocks.draw(screen)
@@ -405,14 +413,20 @@ def game_loop():
         # 게임 오버 조건
 
         if elapsed_time >= 180:
+            pygame.mixer_music.stop()
+            pygame.display.update()
+            rocks.empty()
+            fighters.empty()
+            missiles.empty()
+            items.empty()
+            time.sleep(2)
             running = False
-            return 'time_end'
+            return 'game_end'
         
         fps_clock.tick(FPS)
 
     pygame.mixer_music.stop()
     pygame.display.update()
-    # gameover_sound.play()
     rocks.empty()
     fighters.empty()
     missiles.empty()
@@ -468,8 +482,9 @@ def how_to_play():
     
     return 'how_to_play'
 
-# 시간초과 화면
-def time_end():
+# 게임결과 화면
+def game_end():
+    global p1_fighter, p2_fighter
     background_image = pygame.image.load('src/background_menu.png')
     screen.blit(background_image, [0, 0])
     draw_x = int(WINDOW_WIDTH / 2)
@@ -478,6 +493,22 @@ def time_end():
     font_40 = pygame.font.Font('src/NanumGothic.ttf', 40)
 
     draw_text("게임 오버", font_70, screen, draw_x, draw_y, (0, 255, 255))
+    draw_text(f"1P 점수: {p1_fighter.score:>6d}", font_40, screen, draw_x, draw_y + 400, (255, 255 ,255))
+    draw_text(f"2P 점수: {p2_fighter.score:>6d}", font_40, screen, draw_x, draw_y + 450, (255, 255 ,255))
+
+    if die:
+        if die.name == 'fighter2':
+            win_image = pygame.image.load('src/p1win.png')
+        elif die.name == 'fighter1':
+            win_image = pygame.image.load('src/p2win.png')
+    else:
+        if p1_fighter.score > p2_fighter.score:
+            win_image = pygame.image.load('src/p1win.png')
+        elif p2_fighter.score > p1_fighter.score:
+            win_image = pygame.image.load('src/p2win.png')
+
+    screen.blit(win_image, (draw_x - 81, draw_y + 200))
+
 
     pygame.display.update()
 
@@ -489,7 +520,7 @@ def time_end():
         if event.type == pygame.QUIT:
             return 'quit'
 
-    return 'time_end'
+    return 'game_end'
 
 # 메인 루프
 def main():
@@ -511,8 +542,8 @@ def main():
             action = how_to_play()
         elif action == 'play':
             action = game_loop()
-        elif action == 'time_end':
-            action = time_end()
+        elif action == 'game_end':
+            action = game_end()
 
     pygame.quit()
 
