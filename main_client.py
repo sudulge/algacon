@@ -271,47 +271,6 @@ def game_loop():
                     client.sendall('_down'.encode())
 
         screen.blit(background_image, background_image.get_rect())
-
-        # 한번에 등장하는 운석 개수
-        occur_of_default_rocks = 3 + int(elapsed_time // 20)
-        occur_of_split_rocks = occur_of_default_rocks - 1
-        occur_of_unbreakable_rocks = occur_of_default_rocks - 2
-        min_rock_speed = 3 + int(elapsed_time // 20)
-        max_rock_speed = 3 + int(elapsed_time // 10)
-
-        probablity_num = random.randint(1, 1000)
-        # 운석, 아이템 등장 확률 조정
-
-        if probablity_num > 990:  # 10 / 1000  1%
-            for i in range(2):
-                for j in range(occur_of_default_rocks):
-                    speed = random.randint(min_rock_speed, max_rock_speed)
-                    rock = Rock(random.randint(i*840, (i+1)*840), 0, speed, random.choice(rock_images))
-                    rocks.add(rock)
-        elif probablity_num > 985:  # 5 / 1000  0.5%
-            for i in range(2):
-                for j in range(occur_of_split_rocks):
-                    speed = random.randint(min_rock_speed, max_rock_speed)
-                    rock = SplitRock(random.randint(i*840, (i+1)*840), 0, speed)
-                    rocks.add(rock)
-        elif probablity_num > 980:  # 5 / 1000  0.5%
-            for i in range(2):
-                for j in range(occur_of_unbreakable_rocks):
-                    speed = random.randint(min_rock_speed, max_rock_speed)
-                    rock = UnbreakableRock(random.randint(i*840, (i+1)*840), 0, speed)
-                    rocks.add(rock)
-        elif probablity_num > 978:  # 2 / 1000  0.2%
-            for i in range(2):
-                heal = Heal(random.randint(i*840, (i+1)*840), 0, 20)
-                heal.add(items)
-        elif probablity_num > 973:  # 5 / 1000  0.5% 
-            for i in range(2):
-                speedup = SpeedUp(random.randint(i*840, (i+1)*840), 0, 20)
-                speedup.add(items)
-        elif probablity_num > 970:
-            for i in range(2):
-                powerup = PowerUp(random.randint(i*840, (i+1)*840), 0, 20)
-                powerup.add(items)
         
         draw_text(f'{180 - elapsed_time}', pygame.font.Font('src/NanumGothic.ttf', 60), screen, 840, 30, (255, 255, 255))
 
@@ -567,33 +526,71 @@ def acceptC():
     thread.daemon = True
     thread.start()
 
+def generate_object(obj, speed, position):
+    x = position[0]
+    y = position[1]
+    if obj == 'rock':
+        rock = Rock(x, y, speed, random.choice(rock_images))
+        rocks.add(rock)
+    elif obj == 'splitrock':
+        splitrock = SplitRock(x, y, speed)
+        rocks.add(splitrock)
+    elif obj == 'unbreakablerock':
+        unbreakablerock = UnbreakableRock(x, y, speed)
+        rocks.add(unbreakablerock)
+    elif obj == 'heal':
+        heal = Heal(x, y, speed)
+        heal.add(items)
+    elif obj == 'speedup':
+        speedup = SpeedUp(x, y, speed)
+        speedup.add(items)
+    elif obj == 'powerup':
+        powerup = PowerUp(x, y, speed)
+        powerup.add(items)
+
 def consoles():
     global p1_fighter, p2_fighter, missiles, playing
     while True:
         msg = client.recv(1024)
-        if msg.decode() == 'left':
-            p1_fighter.dx -= 10
-        elif msg.decode() == 'right':
-            p1_fighter.dx += 10
-        elif msg.decode() == 'up':
-            p1_fighter.dy -= 10
-        elif msg.decode() == 'down':
-            p1_fighter.dy += 10
-        elif msg.decode() == 'launch':
-            missile = Missile(p1_fighter.rect.centerx, p1_fighter.rect.y, p1_fighter)
-            missile.launch()
-            missiles.add(missile)
+        print(msg.decode().split("/"))
 
-        elif msg.decode() == '_left':
-            p1_fighter.dx += 10
-        elif msg.decode() == '_right':
-            p1_fighter.dx -= 10
-        elif msg.decode() == '_up':
-            p1_fighter.dy += 10
-        elif msg.decode() == '_down':
-            p1_fighter.dy -= 10
+        # for i in msg.decode().split("/")[1:]:
+        #     generate_object(i[0], i[1], i[2])
+        
+        # print()
+        if msg.decode().startswith("/"): # GENERATE rock 5 123,0
+            for i in msg.decode().split("/")[1:]:
+                generate_object(i.split()[0], int(i.split()[1]), tuple(map(int, i.split()[2].split(','))))
+            # obj = msg.decode().split()[1]
+            # speed = int(msg.decode().split()[2])
+            # position = tuple(map(int, msg.decode().split()[3].split(',')))
+            # generate_object(obj, speed, position)
+            
+        else:
+            if msg.decode() == 'left':
+                p1_fighter.dx -= 10
+            elif msg.decode() == 'right':
+                p1_fighter.dx += 10
+            elif msg.decode() == 'up':
+                p1_fighter.dy -= 10
+            elif msg.decode() == 'down':
+                p1_fighter.dy += 10
+            elif msg.decode() == 'launch':
+                missile = Missile(p1_fighter.rect.centerx, p1_fighter.rect.y, p1_fighter)
+                missile.launch()
+                missiles.add(missile)
 
-        elif msg.decode() == 'GAMESTART':
+            elif msg.decode() == '_left':
+                p1_fighter.dx += 10
+            elif msg.decode() == '_right':
+                p1_fighter.dx -= 10
+            elif msg.decode() == '_up':
+                p1_fighter.dy += 10
+            elif msg.decode() == '_down':
+                p1_fighter.dy -= 10
+
+        if msg.decode() == 'GAMESTART':
+            time.sleep(1)
             playing = True
 
 
