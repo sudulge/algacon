@@ -1,8 +1,10 @@
-# TODO: 게임방법이미지 변경, 전투기선택, 게임 오버화면 - p1, p2 각각 승리화면
+# TODO: 게임방법이미지 변경, 전투기선택, 게임 오버화면 - p1, p2 각각 승리화면, 점수시스템
 
 import pygame
 import random
 import time
+import socket
+import threading
 
 # 게임 화면 세팅
 WINDOW_WIDTH = 1680
@@ -179,7 +181,7 @@ def occur_explosion(surface, x, y):
 
 # 게임 진행 루프
 def game_loop():
-    global selected_menu
+    global selected_menu, p1_fighter, p2_fighter, missiles
     default_font = pygame.font.Font('src/NanumGothic.ttf', 28)
     background_image = pygame.image.load('src/background_ingame.png')
     gameover_sound = pygame.mixer.Sound('src/gameover.wav')
@@ -224,13 +226,18 @@ def game_loop():
 
                 elif event.key == pygame.K_LEFT:
                     p2_fighter.dx -= 10
+                    client.sendall('left'.encode())
                 elif event.key == pygame.K_RIGHT:
                     p2_fighter.dx += 10
+                    client.sendall('right'.encode())
                 elif event.key == pygame.K_UP:
                     p2_fighter.dy -= 10
+                    client.sendall('up'.encode())
                 elif event.key == pygame.K_DOWN:
                     p2_fighter.dy += 10
+                    client.sendall('down'.encode())
                 elif event.key == pygame.K_RCTRL:
+                    client.sendall('launch'.encode())
                     missile = Missile(p2_fighter.rect.centerx, p2_fighter.rect.y, p2_fighter)
                     missile.launch()
                     missiles.add(missile)
@@ -247,12 +254,16 @@ def game_loop():
 
                 elif event.key == pygame.K_LEFT:
                     p2_fighter.dx += 10
+                    client.sendall('_left'.encode())
                 elif event.key == pygame.K_RIGHT:
                     p2_fighter.dx -= 10
+                    client.sendall('_right'.encode())
                 elif event.key == pygame.K_UP:
                     p2_fighter.dy += 10
+                    client.sendall('_up'.encode())
                 elif event.key == pygame.K_DOWN:
                     p2_fighter.dy -= 10
+                    client.sendall('_down'.encode())
 
         screen.blit(background_image, background_image.get_rect())
 
@@ -516,5 +527,46 @@ def main():
 
     pygame.quit()
 
+HOST = 'localhost'
+PORT = 50007
+
+def acceptC():
+    global client
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client.connect((HOST, PORT))
+
+    thread = threading.Thread(target=consoles, args=())
+    thread.daemon = True
+    thread.start()
+
+def consoles():
+    global p1_fighter, p2_fighter, missiles
+    while True:
+        msg = client.recv(1024)
+        if msg.decode() == 'left':
+            p1_fighter.dx -= 10
+        elif msg.decode() == 'right':
+            p1_fighter.dx += 10
+        elif msg.decode() == 'up':
+            p1_fighter.dy -= 10
+        elif msg.decode() == 'down':
+            p1_fighter.dy += 10
+        elif msg.decode() == 'launch':
+            missile = Missile(p1_fighter.rect.centerx, p1_fighter.rect.y, p1_fighter)
+            missile.launch()
+            missiles.add(missile)
+
+        elif msg.decode() == '_left':
+            p1_fighter.dx += 10
+        elif msg.decode() == '_right':
+            p1_fighter.dx -= 10
+        elif msg.decode() == '_up':
+            p1_fighter.dy += 10
+        elif msg.decode() == '_down':
+            p1_fighter.dy -= 10
+
+
+
 if __name__ == "__main__":
+    acceptC()
     main()
