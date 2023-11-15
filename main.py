@@ -13,14 +13,16 @@ P2_WIDTH = 1680
 # 프레임 설정
 FPS = 60
 
-# 화면상에 존재하는 운석 그룹
+# 화면상에 존재하는 sprite 그룹
 rocks = pygame.sprite.Group()
 rock_images = [f'rock{i:02d}' for i in range(1, 5)]
 
 items = pygame.sprite.Group()
 
+# 메뉴 선택 
 selected_menu = 1
 
+# 죽은 전투기
 die = None
 
 # 전투기 클래스 정의
@@ -147,15 +149,18 @@ class Item(pygame.sprite.Sprite):
     def out_of_screen(self):
         if self.rect.y > WINDOW_HEIGHT:
             return True
-        
+
+# 체력회복
 class Heal(Item):
     def __init__(self, xpos, ypos, speed):
         super().__init__(xpos, ypos, speed, 'heart')
 
+# 속도 증가
 class SpeedUp(Item):
     def __init__(self, xpos, ypos, speed):
         super().__init__(xpos, ypos, speed, 'speedup')
 
+# 공격력 증가
 class PowerUp(Item):
     def __init__(self, xpos, ypos, speed):
         super().__init__(xpos, ypos, speed, 'powerup')
@@ -176,9 +181,6 @@ def occur_explosion(surface, x, y):
     explosion_rect.centery = y
     surface.blit(explosion_image, explosion_rect)
     
-    # explosion_sounds = [f'src/explosion{i:02d}.wav' for i in range(1, 4)]
-    # explosion_sound = pygame.mixer.Sound(random.choice(explosion_sounds))
-    # explosion_sound.play()
 
 # 게임 진행 루프
 def game_loop():
@@ -267,8 +269,8 @@ def game_loop():
         max_rock_speed = 3 + int(elapsed_time // 10)
 
         probablity_num = random.randint(1, 1000)
-        # 운석, 아이템 등장 확률 조정
 
+        # 운석, 아이템 등장 확률 조정
         if probablity_num > 990:  # 10 / 1000  1%
             for i in range(2):
                 for j in range(occur_of_default_rocks):
@@ -304,6 +306,7 @@ def game_loop():
         draw_text(f'{p1_fighter.score}', pygame.font.Font('src/NanumGothic.ttf', 40), screen, 70, 30, (255, 255, 255))
         draw_text(f'{p2_fighter.score}', pygame.font.Font('src/NanumGothic.ttf', 40), screen, 1610, 30, (255, 255, 255))
 
+        # 미사일, 운석 충돌 판정
         for missile in missiles:
             rock = missile.collide(rocks)
             if rock:
@@ -326,6 +329,7 @@ def game_loop():
             if item.out_of_screen():
                 item.kill()
         
+        # 전투기 상태 변경, 운석, 아이템 충돌 판정
         for fighter in fighters:
             if fighter.invincible:
                 if (pygame.time.get_ticks() - fighter.invincible_time) / 1000 >= 2:
@@ -369,7 +373,8 @@ def game_loop():
                 elif type(item).__name__ == 'PowerUp':
                     fighter.power = 2
                     fighter.powerup_time = pygame.time.get_ticks()
-            
+        
+        # 전투기 체력 표시
         for i in range(1, 6):
             if p1_fighter.life >= i:
                 heart = pygame.image.load('src/heart.png')
@@ -410,8 +415,7 @@ def game_loop():
         items.draw(screen)
         pygame.display.flip()
 
-        # 게임 오버 조건
-
+        # 시간 종료 
         if elapsed_time >= 180:
             pygame.mixer_music.stop()
             pygame.display.update()
